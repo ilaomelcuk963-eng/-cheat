@@ -802,7 +802,88 @@
             font-size: 14px;
         }
 
-     /* Responsive Styles */
+               /* Fireworks Animation */
+        .fireworks-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2000;
+            display: none;
+        }
+
+        .firework {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .firework::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: inherit;
+            border-radius: 50%;
+            animation: firework-explode 1s ease-out forwards;
+        }
+
+        @keyframes firework-explode {
+            0% {
+                transform: translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty));
+                opacity: 0;
+            }
+        }
+
+        /* Profile Section */
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: var(--dark-surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            overflow: hidden;
+        }
+
+        .profile-avatar i {
+            font-size: 40px;
+            color: var(--text-secondary);
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-info h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .profile-info p {
+            margin-bottom: 5px;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive Styles */
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -967,6 +1048,7 @@
                     <div class="profile-info">
                         <h3 id="profile-username">Войдите в аккаунт Roblox</h3>
                         <p id="profile-userid">ID: -</p>
+                        <p id="profile-created">Дата регистрации: -</p>
                         <p>Баланс: 0 R$</p>
                     </div>
                     <button class="buy-btn" id="connect-roblox">Подключить Roblox</button>
@@ -1072,7 +1154,7 @@
                             </thead>
                             <tbody id="visitors-table">
                                 <!-- Данные о посетителях -->
-</tbody>
+                            </tbody>
                         </table>
                     </div>
 
@@ -1202,6 +1284,9 @@
         </div>
     </div>
 
+    <!-- Анимация фейерверка -->
+    <div class="fireworks-container" id="fireworks-container"></div>
+
     <footer>
         <div class="container">
             <div class="footer-content">
@@ -1300,8 +1385,7 @@
                 }
             });
         });
-
-        // Слайдер для выбора количества Robux
+  // Слайдер для выбора количества Robux
         const robuxSlider = document.getElementById('robux-slider');
         const offerPrice = document.getElementById('offer-price');
         const offerRobux = document.getElementById('offer-robux');
@@ -1420,7 +1504,8 @@
         cardNumberInput.addEventListener('input', () => {
             const cardNumber = cardNumberInput.value.replace(/\s/g, '');
             let cardType = 'unknown';
-        // Определяем тип карты по первым цифрам
+            
+            // Определяем тип карты по первым цифрам
             if (/^4/.test(cardNumber)) {
                 cardType = 'visa';
             } else if (/^5[1-5]/.test(cardNumber)) {
@@ -1491,6 +1576,60 @@
             e.target.value = e.target.value.replace(/\D/g, '').substring(0, 3);
         });
         
+        // Анимация фейерверка
+        function createFireworks(robuxCount) {
+            const container = document.getElementById('fireworks-container');
+            container.style.display = 'block';
+            
+            // Количество фейерверков зависит от количества купленных Robux
+            const fireworkCount = Math.min(robuxCount / 100, 30);
+            
+            for (let i = 0; i < fireworkCount; i++) {
+                setTimeout(() => {
+                    createFirework(container);
+                }, i * 100);
+            }
+            
+            // Скрываем контейнер после завершения анимации
+            setTimeout(() => {
+                container.style.display = 'none';
+                container.innerHTML = '';
+            }, 3000);
+        }
+        
+        function createFirework(container) {
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+            
+            // Случайная позиция на экране
+            const posX = Math.random() * window.innerWidth;
+            const posY = Math.random() * window.innerHeight;
+            
+            // Случайный цвет из палитры Roblox
+            const colors = ['#ff5c5c', '#5cff5c', '#5c5cff', '#ffff5c', '#ff5cff', '#5cffff'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            firework.style.left = `${posX}px`;
+            firework.style.top = `${posY}px`;
+            firework.style.backgroundColor = color;
+            
+            // Случайные направления для частиц
+            const tx = (Math.random() - 0.5) * 200;
+            const ty = (Math.random() - 0.5) * 200;
+            
+            firework.style.setProperty('--tx', `${tx}px`);
+            firework.style.setProperty('--ty', `${ty}px`);
+            
+            container.appendChild(firework);
+            
+            // Удаляем элемент после завершения анимации
+            setTimeout(() => {
+                if (firework.parentNode) {
+                    firework.parentNode.removeChild(firework);
+                }
+            }, 1000);
+        }
+        
         // Обработка формы оплаты
         paymentForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1506,6 +1645,9 @@
             
             siteData.orders.push(order);
             saveData();
+            
+            // Запускаем анимацию фейерверка
+            createFireworks(order.robux);
             
             // Показываем сообщение об успехе
             successMessage.classList.add('active');
@@ -1534,6 +1676,7 @@
         const connectRobloxBtn = document.getElementById('connect-roblox');
         const profileUsername = document.getElementById('profile-username');
         const profileUserid = document.getElementById('profile-userid');
+        const profileCreated = document.getElementById('profile-created');
         const defaultAvatar = document.getElementById('default-avatar');
         const profileAvatarImg = document.getElementById('profile-avatar-img');
         
@@ -1546,34 +1689,46 @@
             connectRobloxBtn.disabled = true;
             
             try {
-                // Получаем информацию о пользователе
-                const userResponse = await fetch(`https://api.roblox.com/users/get-by-username?username=${username}`);
+                // Получаем информацию о пользователе по имени
+                const userResponse = await fetch(`https://users.roblox.com/v1/users/search?keyword=${username}`);
                 const userData = await userResponse.json();
                 
-                if (userData.Id) {
+                if (userData.data && userData.data.length > 0) {
+                    const userId = userData.data[0].id;
+                    
+                    // Получаем детальную информацию о пользователе по ID
+                    const userDetailResponse = await fetch(`https://users.roblox.com/v1/users/${userId}`);
+                    const userDetailData = await userDetailResponse.json();
+                    
                     // Получаем аватар пользователя
-                    const avatarResponse = await fetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userData.Id}&size=420x420&format=Png`);
+                    const avatarResponse = await fetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=420x420&format=Png`);
                     const avatarData = await avatarResponse.json();
                     
                     // Обновляем профиль
-                    profileUsername.textContent = userData.Username;
-                    profileUserid.textContent = `ID: ${userData.Id}`;
+                    profileUsername.textContent = userDetailData.name || userDetailData.displayName;
+                    profileUserid.textContent = `ID: ${userId}`;
+                    
+                    // Форматируем дату регистрации
+                    if (userDetailData.created) {
+                        const createdDate = new Date(userDetailData.created);
+                        profileCreated.textContent = `Дата регистрации: ${createdDate.toLocaleDateString('ru-RU')}`;
+                    }
                     
                     if (avatarData.data && avatarData.data.length > 0) {
                         profileAvatarImg.src = avatarData.data[0].imageUrl;
                         profileAvatarImg.style.display = 'block';
                         defaultAvatar.style.display = 'none';
                     }
-                    
-                    // Сохраняем данные в localStorage
+        // Сохраняем данные в localStorage
                     localStorage.setItem('coin2game-roblox-user', JSON.stringify({
-                        username: userData.Username,
-                        id: userData.Id,
-                        avatarUrl: avatarData.data && avatarData.data.length > 0 ? avatarData.data[0].imageUrl : null
+                        username: userDetailData.name || userDetailData.displayName,
+                        id: userId,
+                        avatarUrl: avatarData.data && avatarData.data.length > 0 ? avatarData.data[0].imageUrl : null,
+                        created: userDetailData.created
                     }));
                     
                     alert('Аккаунт Roblox успешно подключен!');
-                    trackVisit('roblox_connected', userData.Username);
+                    trackVisit('roblox_connected', userDetailData.name || userDetailData.displayName);
                 } else {
                     alert('Пользователь не найден');
                 }
@@ -1740,6 +1895,9 @@
                     promotion.quantity--;
                     
                     saveData();
+                    
+                    // Запускаем анимацию фейерверка
+                    createFireworks(promotion.robux);
                     
                     alert(`Вы приобрели акцию: ${promotion.robux} R$ за ${promotion.price} ₽`);
                     trackVisit('promotion_purchase', `${promotion.robux} R$ за ${promotion.price} ₽`);
@@ -1946,6 +2104,11 @@
                 const userData = JSON.parse(savedUser);
                 profileUsername.textContent = userData.username;
                 profileUserid.textContent = `ID: ${userData.id}`;
+                
+                if (userData.created) {
+                    const createdDate = new Date(userData.created);
+                    profileCreated.textContent = `Дата регистрации: ${createdDate.toLocaleDateString('ru-RU')}`;
+                }
                 
                 if (userData.avatarUrl) {
                     profileAvatarImg.src = userData.avatarUrl;
